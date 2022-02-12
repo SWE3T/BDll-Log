@@ -1,0 +1,25 @@
+{
+  "name": "bdll-log",
+  "version": "1.0.0",
+  "description": "Trabalho de log ",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "pg": "^8.7.3",
+    "require": "^2.4.20"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SWE3T/BDll-Log.git"
+  },
+  "author": "SWEET",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SWE3T/BDll-Log/issues"
+  },
+  "homepage": "https://github.com/SWE3T/BDll-Log#readme"
+}
