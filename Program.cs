@@ -10,28 +10,72 @@ namespace REDO
     {
         static void Main()
         {
+            readFile();
             showTable();
+        }
+
+        private static void readFile()
+        {
+            NpgsqlConnection con = new NpgsqlConnection(
+                "Host=localhost; Username=usuario; Password=123456789; Database=trabalho2"
+            );
+
+            con.Open();
+            
+            string filename = @"entradaLog.txt";
+            
+            var lines = File.ReadAllLines(filename);
+            
+            // read each line from file
+            foreach (var line in lines)
+            {
+                Console.WriteLine(line);
+                if (line.Contains("="))
+                {
+                    Console.WriteLine("A linha contém '=';");
+
+                    string[] result = line.Split(',', '=');
+                    // Console.WriteLine(result[0]);
+                    // Console.WriteLine(result[1]);
+                    // Console.WriteLine(result[2]);
+                    //id A B
+                    var sql =
+                        "INSERT INTO log (id, " +
+                        '"' + result[0] + '"' +") VALUES ('"
+                        + result[1] + "', '" + result[2]
+                        + "') ON CONFLICT (id) DO UPDATE SET " 
+                        +'"' + result[0] + '"' + " =  " + result[2] + ";";
+                    Console.WriteLine(sql);
+
+                    using var cmd = new NpgsqlCommand(sql, con);
+                    cmd.ExecuteNonQuery();
+                    //INSERT INTO
+                    //   log (id, "A")
+                    // VALUES
+                    //   ('1', '20') 
+                    // ON CONFLICT (id) DO UPDATE 
+                    //   SET "A" = 20;
+
+                }
+            }
+            // read target line directly
+            Console.WriteLine(targetLine);
         }
 
         private static void showTable()
         {
-            // Specify connection options and open an connection
             NpgsqlConnection conn = new NpgsqlConnection(
                 "Host=localhost;Username=usuario;Password=123456789;Database=trabalho2"
             );
             conn.Open();
 
-            // Define a query
-            NpgsqlCommand cmd = new NpgsqlCommand("select id, value from log", conn);
+            NpgsqlCommand cmd = new NpgsqlCommand("select * from log", conn);
 
-            // Execute a query
             NpgsqlDataReader dr = cmd.ExecuteReader();
 
-            // Read all rows and output the first column in each row
             while (dr.Read())
-                Console.Write("{0:D}, {1:D}\n", dr[0], dr[1]);
+                Console.Write("ID: {0:D}, A: {1:D}, B: {2:D}\n", dr[0], dr[1], dr[2]);
 
-            // Close connection
             conn.Close();
         }
     }
