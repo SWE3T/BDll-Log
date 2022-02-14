@@ -64,6 +64,8 @@ namespace REDO
             }
 
             int indexCKPT = 0;
+            String[] transAbertas = new string[7];
+
             for (var a = lines.Length - 1; a > 0; a--) //acha o ult check
             {
                 if (lines[a].Contains("Start CKPT"))
@@ -71,15 +73,45 @@ namespace REDO
                     lines[a] = lines[a].Replace("Start CKPT", "");
                     lines[a] = lines[a].Replace("(", "");
                     lines[a] = lines[a].Replace(")", "");
-                    string[] transAbertas = lines[a].Split(',');
-                    indexCKPT = a+1;
+                    transAbertas = lines[a].Split(',');
+                    indexCKPT = a + 1;
                     break;
                 }
             }
 
             Console.WriteLine("linha do CKPT: {0:D}", indexCKPT);
+            //Console.WriteLine(transAbertas[0]);
+
+            for (var t = 0; t < transAbertas.Length; t++)
+            {
+                transAbertas[t] = transAbertas[t] + " NÃO sofreu REDO.";
+            }
+
+            for (var b = indexCKPT - 1; b < lines.Length; b++) //checa os commits <commit T4>
+            {
+                if (lines[b].Contains("commit"))
+                {
+                    string[] commit = lines[b].Split(" ");
+                    string value = commit[1] + " NÃO sofreu REDO.";
+
+                    int index = Array.IndexOf(transAbertas, value);
+                    if (index > -1)
+                    {
+                        transAbertas[index] = commit[1] + " sofreu REDO.";
+                    }
+
+                    // Console.WriteLine("A transação " + commit[1] + " sofreu REDO.");
+                    //refaz o caminho
+
+                }
+            }
+            //refaz se precisar, se não segue pro prox
             Console.WriteLine("Valores iniciais: ");
             showTable();
+            foreach (var item in transAbertas)
+            {
+                Console.WriteLine(item);
+            }
         }
 
         private static void showTable()
