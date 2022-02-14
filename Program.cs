@@ -11,7 +11,6 @@ namespace REDO
         static void Main()
         {
             readFile();
-            //showTable();
         }
 
         private static void readFile()
@@ -32,41 +31,28 @@ namespace REDO
             {
                 lines[i] = lines[i].Replace(">", "");
                 lines[i] = lines[i].Replace("<", "");
-                //Console.WriteLine(lines[i]);
                 i++;
 
-                //Console.WriteLine(line);
-                if (line.Contains("=")) //atribuição
+                if (line.Contains("=")) // Caso seja atribuição
                 {
                     string[] result = line.Split(',', '=');
 
                     var sql =
-                        "INSERT INTO log (id, "
-                        + '"'
-                        + result[0]
-                        + '"'
-                        + ") VALUES ('"
-                        + result[1]
-                        + "', '"
-                        + result[2]
-                        + "') ON CONFLICT (id) DO UPDATE SET "
-                        + '"'
-                        + result[0]
-                        + '"'
-                        + " =  "
-                        + result[2]
-                        + ";";
-                    //Console.WriteLine(sql);
+                        "INSERT INTO log (id, " + '"' + result[0] + '"' + ") VALUES ('" + result[1] + "', '" + result[2] 
+                        + "') ON CONFLICT (id) DO UPDATE SET " + '"' + result[0] + '"' + " =  " + result[2] + ";";
 
                     using var cmd = new NpgsqlCommand(sql, con);
                     cmd.ExecuteNonQuery();
                 }
             }
 
+            Console.WriteLine("\nValores iniciais: ");
+
+            showTable();
             int indexCKPT = 0;
             String[] transAbertas = new string[7];
 
-            for (var a = lines.Length - 1; a > 0; a--) //acha o ult check
+            for (var a = lines.Length - 1; a > 0; a--) // Acha o ultimo check
             {
                 if (lines[a].Contains("Start CKPT"))
                 {
@@ -79,15 +65,14 @@ namespace REDO
                 }
             }
 
-            Console.WriteLine("linha do CKPT: {0:D}", indexCKPT);
-            //Console.WriteLine(transAbertas[0]);
+            Console.WriteLine("linha do último CKPT: {0:D}", indexCKPT);
 
             for (var t = 0; t < transAbertas.Length; t++)
             {
                 transAbertas[t] = transAbertas[t] + " NÃO sofreu REDO.";
             }
 
-            for (var b = indexCKPT - 1; b < lines.Length; b++) //checa os commits <commit T4>
+            for (var b = indexCKPT - 1; b < lines.Length; b++) // Checa os commits no formato <commit T4>
             {
                 if (lines[b].Contains("commit"))
                 {
@@ -100,18 +85,31 @@ namespace REDO
                         transAbertas[index] = commit[1] + " sofreu REDO.";
                     }
 
-                    // Console.WriteLine("A transação " + commit[1] + " sofreu REDO.");
-                    //refaz o caminho
+                    for (var l = 0; l < lines.Length - 1; l++)
+                    {
+                        if (lines[l].Contains(commit[1]) & lines[l].Split(",").Length == 4)
+                        {
+                            string[] query = lines[l].Split(",");
+                            var sql =
+                                "INSERT INTO log (id, " + '"' + query[2] + '"' + ") VALUES ('" + query[1] + "', '" + query[3]
+                                + "') ON CONFLICT (id) DO UPDATE SET " + '"' + query[2] + '"' + " =  " + query[3] + ";";
+                            //Console.WriteLine(sql); // Debug
 
+                            using var cmd = new NpgsqlCommand(sql, con);
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
                 }
             }
-            //refaz se precisar, se não segue pro prox
-            Console.WriteLine("Valores iniciais: ");
-            showTable();
+
+           
             foreach (var item in transAbertas)
             {
                 Console.WriteLine(item);
             }
+            
+            Console.WriteLine("\nValores após o REDO: ");
+            showTable();
         }
 
         private static void showTable()
@@ -120,13 +118,15 @@ namespace REDO
                 "Host=localhost;Username=usuario;Password=123456789;Database=trabalho2"
             );
             conn.Open();
-            NpgsqlCommand cmd = new NpgsqlCommand("select * from log", conn);
+            NpgsqlCommand cmd = new NpgsqlCommand("SELECT * FROM log ORDER BY id", conn);
 
             NpgsqlDataReader dr = cmd.ExecuteReader();
-
+            Console.WriteLine();
             while (dr.Read())
                 Console.Write("ID: {0:D}, A: {1:D}, B: {2:D}\n", dr[0], dr[1], dr[2]);
             conn.Close();
+            Console.WriteLine();
+
         }
     }
 }

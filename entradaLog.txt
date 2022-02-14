@@ -12,14 +12,13 @@ B,2=30
 <T3,2,B,15>
 <commit T1>
 <start T4>
-<T4,1,A,90>
+<T4,1,A,90> 
 <start T5>
 <Start CKPT(T3,T4,T5)>
-<commit T4>
+<commit T4> 
 <T5,1,A,40>
 <End CKPT>
 <T3,2,B,28>
-<commit T3>
-<commit T5>
+<commit T3> 
 <crash>
 
