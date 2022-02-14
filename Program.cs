@@ -11,7 +11,7 @@ namespace REDO
         static void Main()
         {
             readFile();
-            showTable();
+            //showTable();
         }
 
         private static void readFile()
@@ -21,45 +21,65 @@ namespace REDO
             );
 
             con.Open();
-            
+
             string filename = @"entradaLog.txt";
-            
+
             var lines = File.ReadAllLines(filename);
-            
-            // read each line from file
+
+            int i = 0;
+
             foreach (var line in lines)
             {
-                Console.WriteLine(line);
-                if (line.Contains("="))
-                {
-                    Console.WriteLine("A linha contém '=';");
+                lines[i] = lines[i].Replace(">", "");
+                lines[i] = lines[i].Replace("<", "");
+                //Console.WriteLine(lines[i]);
+                i++;
 
+                //Console.WriteLine(line);
+                if (line.Contains("=")) //atribuição
+                {
                     string[] result = line.Split(',', '=');
-                    // Console.WriteLine(result[0]);
-                    // Console.WriteLine(result[1]);
-                    // Console.WriteLine(result[2]);
-                    //id A B
+
                     var sql =
-                        "INSERT INTO log (id, " +
-                        '"' + result[0] + '"' +") VALUES ('"
-                        + result[1] + "', '" + result[2]
-                        + "') ON CONFLICT (id) DO UPDATE SET " 
-                        +'"' + result[0] + '"' + " =  " + result[2] + ";";
-                    Console.WriteLine(sql);
+                        "INSERT INTO log (id, "
+                        + '"'
+                        + result[0]
+                        + '"'
+                        + ") VALUES ('"
+                        + result[1]
+                        + "', '"
+                        + result[2]
+                        + "') ON CONFLICT (id) DO UPDATE SET "
+                        + '"'
+                        + result[0]
+                        + '"'
+                        + " =  "
+                        + result[2]
+                        + ";";
+                    //Console.WriteLine(sql);
 
                     using var cmd = new NpgsqlCommand(sql, con);
                     cmd.ExecuteNonQuery();
-                    //INSERT INTO
-                    //   log (id, "A")
-                    // VALUES
-                    //   ('1', '20') 
-                    // ON CONFLICT (id) DO UPDATE 
-                    //   SET "A" = 20;
-
                 }
             }
-            // read target line directly
-            Console.WriteLine(targetLine);
+
+            int indexCKPT = 0;
+            for (var a = lines.Length - 1; a > 0; a--) //acha o ult check
+            {
+                if (lines[a].Contains("Start CKPT"))
+                {
+                    lines[a] = lines[a].Replace("Start CKPT", "");
+                    lines[a] = lines[a].Replace("(", "");
+                    lines[a] = lines[a].Replace(")", "");
+                    string[] transAbertas = lines[a].Split(',');
+                    indexCKPT = a+1;
+                    break;
+                }
+            }
+
+            Console.WriteLine("linha do CKPT: {0:D}", indexCKPT);
+            Console.WriteLine("Valores iniciais: ");
+            showTable();
         }
 
         private static void showTable()
@@ -68,15 +88,15 @@ namespace REDO
                 "Host=localhost;Username=usuario;Password=123456789;Database=trabalho2"
             );
             conn.Open();
-
             NpgsqlCommand cmd = new NpgsqlCommand("select * from log", conn);
 
             NpgsqlDataReader dr = cmd.ExecuteReader();
 
             while (dr.Read())
                 Console.Write("ID: {0:D}, A: {1:D}, B: {2:D}\n", dr[0], dr[1], dr[2]);
-
             conn.Close();
         }
     }
 }
+//verifica se tem end ->
+//o que está em aberto com commit o que foi aberto e commitado durante o start end deve ser refeito
